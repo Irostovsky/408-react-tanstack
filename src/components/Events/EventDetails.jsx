@@ -1,17 +1,37 @@
-import { Link, Outlet, useParams } from "react-router-dom";
+import { Link, Outlet, useParams, useNavigate } from "react-router-dom";
 
 import Header from "../Header.jsx";
-import { useQuery } from "@tanstack/react-query";
-import { fetchEvent } from "../../util/http";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { fetchEvent, deleteEvent } from "../../util/http";
 import LoadingIndicator from "../UI/LoadingIndicator.jsx";
 import ErrorBlock from "../UI/ErrorBlock.jsx";
 
 export default function EventDetails() {
   const { id } = useParams();
+  const navigate = useNavigate();
+  const queryClient = useQueryClient();
+
   const { data, isLoading, isError, error } = useQuery({
     queryKey: ["event", id],
     queryFn: ({ signal }) => fetchEvent({ id, signal }),
   });
+
+  const {
+    mutate,
+    isPending,
+    isError: isDeleteError,
+    error: deleteError,
+  } = useMutation({
+    mutationFn: deleteEvent,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["events"] });
+      navigate("/events");
+    },
+  });
+
+  function handleDelete() {
+    mutate({ id });
+  }
 
   if (isLoading) {
     return <LoadingIndicator />;
@@ -19,6 +39,10 @@ export default function EventDetails() {
 
   if (isError) {
     return <ErrorBlock title="An error occurred" message={error.info?.message || "Failed to fetch event"} />;
+  }
+
+  if (isDeleteError) {
+    return <ErrorBlock title="An error occurred" message={deleteError.info?.message || "Failed to delete event"} />;
   }
 
   return (
@@ -33,7 +57,9 @@ export default function EventDetails() {
         <header>
           <h1>{data.title}</h1>
           <nav>
-            <button>Delete</button>
+            <button onClick={handleDelete} disabled={isPending}>
+              {isPending ? "Deleting..." : "Delete"}
+            </button>
             <Link to="edit">Edit</Link>
           </nav>
         </header>
