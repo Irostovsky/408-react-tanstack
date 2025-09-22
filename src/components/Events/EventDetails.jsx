@@ -1,18 +1,18 @@
 import { Link, Outlet, useParams, useNavigate } from "react-router-dom";
 
 import Header from "../Header.jsx";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useMutation } from "@tanstack/react-query";
 import { fetchEvent, deleteEvent } from "../../util/http";
 import LoadingIndicator from "../UI/LoadingIndicator.jsx";
 import ErrorBlock from "../UI/ErrorBlock.jsx";
+import { queryClient } from "../../util/http.js";
 
 export default function EventDetails() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const queryClient = useQueryClient();
 
   const { data, isLoading, isError, error } = useQuery({
-    queryKey: ["event", id],
+    queryKey: ["events", id],
     queryFn: ({ signal }) => fetchEvent({ id, signal }),
   });
 
@@ -31,6 +31,15 @@ export default function EventDetails() {
 
   function handleDelete() {
     mutate({ id });
+  }
+
+  function formatDateToUS(dateString) {
+    const date = new Date(dateString);
+    return date.toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+    });
   }
 
   if (isLoading) {
@@ -68,8 +77,8 @@ export default function EventDetails() {
           <div id="event-details-info">
             <div>
               <p id="event-details-location">{data.location}</p>
-              <time dateTime={`Todo-DateT$Todo-Time`}>
-                {data.date} @ {data.time}
+              <time dateTime={`${data.date}T${data.time}`}>
+                {formatDateToUS(data.date)} @ {data.time}
               </time>
             </div>
             <p id="event-details-description">{data.description}</p>
