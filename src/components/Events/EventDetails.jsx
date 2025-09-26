@@ -53,12 +53,47 @@ export default function EventDetails() {
     });
   }
 
+  let content;
   if (isLoading) {
-    return <LoadingIndicator />;
+    content = (
+      <div id="event-details-content" className="center">
+        <p>Fetching event details...</p>
+      </div>
+    );
   }
 
   if (isError) {
-    return <ErrorBlock title="An error occurred" message={error.info?.message || "Failed to fetch event"} />;
+    content = (
+      <div id="event-details-content" className="center">
+        <ErrorBlock title="An error occurred" message={error.info?.message || "Failed to fetch event"} />
+      </div>
+    );
+  }
+
+  if (data) {
+    content = (
+      <>
+        <header>
+          <h1>{data.title}</h1>
+          <nav>
+            <button onClick={handleStartDelete}>Delete</button>
+            <Link to="edit">Edit</Link>
+          </nav>
+        </header>
+        <div id="event-details-content">
+          <img src={`http://localhost:3000/${data.image}`} alt={data.title} />
+          <div id="event-details-info">
+            <div>
+              <p id="event-details-location">{data.location}</p>
+              <time dateTime={`${data.date}T${data.time}`}>
+                {formatDateToUS(data.date)} @ {data.time}
+              </time>
+            </div>
+            <p id="event-details-description">{data.description}</p>
+          </div>
+        </div>
+      </>
+    );
   }
 
   return (
@@ -89,27 +124,7 @@ export default function EventDetails() {
           View all Events
         </Link>
       </Header>
-      <article id="event-details">
-        <header>
-          <h1>{data.title}</h1>
-          <nav>
-            <button onClick={handleStartDelete}>Delete</button>
-            <Link to="edit">Edit</Link>
-          </nav>
-        </header>
-        <div id="event-details-content">
-          <img src={`http://localhost:3000/${data.image}`} alt={data.title} />
-          <div id="event-details-info">
-            <div>
-              <p id="event-details-location">{data.location}</p>
-              <time dateTime={`${data.date}T${data.time}`}>
-                {formatDateToUS(data.date)} @ {data.time}
-              </time>
-            </div>
-            <p id="event-details-description">{data.description}</p>
-          </div>
-        </div>
-      </article>
+      <article id="event-details">{content}</article>
     </>
   );
 }
